@@ -2,3 +2,5 @@ lib/*
 lib
 out
 cache
+mnemonic.txt
+deploy.sh
