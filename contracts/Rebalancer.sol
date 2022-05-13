@@ -40,10 +40,6 @@ contract Rebalancer {
         uint256 senderLTcDeposit = (portfolio.ltc * msg.value) / 100;
         uint256 newLtcDeposit = ltcDeposit + senderLTcDeposit;
 
-        console.log("ltc");
-        console.log(newLtcDeposit);
-        console.log(newBtcDeposit);
-
         uint256 newTotalDeposits = newBtcDeposit + newLtcDeposit;
 
         /**
@@ -52,6 +48,9 @@ contract Rebalancer {
         */
         amm.swap{value: senderBtcDeposit}("ETH", "BTC", senderBtcDeposit);
         amm.swap{value: senderLTcDeposit}("ETH", "LTC", senderLTcDeposit);
+
+        btcExposure[msg.sender] = amm.getLatestPrice('BTC');
+        ltcExposure[msg.sender] = amm.getLatestPrice('LTC');
 
         btcDeposit = newBtcDeposit;
         ltcDeposit = newLtcDeposit;
@@ -76,10 +75,13 @@ contract Rebalancer {
             uint256 ethChunks = ((newBtcPrice * (btcRatio - btcWantedRatio)) /
                 10000) / coinExposure;
 
-            // TODO: THis should update the exposoure to the assets. 
+            // TODO: THis should update the exposoure to the assets.
             // Because of the value increase, we have more in both BTC and LTC.
             amm.swap("BTC", "ETH", ethChunks);
             amm.swap{value: this.getBalance()}("ETH", "LTC", ethChunks);
+
+            btcDeposit = newBtcPrice - ethChunks;
+            ltcDeposit = ltcDeposit + ethChunks;
         }
     }
 
@@ -90,11 +92,24 @@ contract Rebalancer {
 
             Might be a bit more complicated, we will see :)
          */
-        revert("Not implemented");
+        //revert("Not implemented");
+
+        /**
+            t_0 = buy 1 BTC for 1 ETH
+            t_1 = price of BTC goes to 2
+            t_2 = you want to withdraw 2 ETH
+            
+
+            I guess this is a bit more tricky, one thing we could do is issue some 
+            token to more easily keep track of the portfolio value maybe.
+
+            
+            -> 
+         */
+
     }
 
     function getBalance() public view returns (uint256) {
-        console.log(address(this));
         return address(this).balance;
     }
 

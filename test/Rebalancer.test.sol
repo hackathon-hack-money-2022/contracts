@@ -31,8 +31,6 @@ contract RebalancerTest is Test {
     function testDeposit() public {
         Test.deal(address(this), 1 ether);
         assert(0 < rebalancer.deposit{value: 0.05 ether}(Portfolio(50, 50)));
-        //  Test.warp(1);
-        //        assert(0 < rebalancer.getBalance());
     }
 
     function testUpdateExposure() public {
@@ -61,8 +59,8 @@ contract RebalancerTest is Test {
         assert(rebalancer.totalDeposits() <= 1.5 ether);
 
         assert(rebalancer.btcDeposit() == 1 ether);
-
         assert(rebalancer.ltcDeposit() <= 0.5 ether);
+
         assert(0 < mockLTC.balanceOf(address(rebalancer)));
         assert(0 < mockBTC.balanceOf(address(rebalancer)));
     }
@@ -75,12 +73,6 @@ contract RebalancerTest is Test {
         assert(
             0 < rebalancer.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
         );
-        /*
-        console.log(address(rebalancer));
-        console.log(rebalancer.getBalance());
-
-        assert(0 < rebalancer.getBalance());
-*/
         assert(rebalancer.totalDeposits() <= 1.5 ether);
 
         // Price of BTC doubles, need to rebalance the portfolio!!
@@ -96,15 +88,36 @@ contract RebalancerTest is Test {
             We want to be 0.66% exposed to BTC and 33 % to LTC.
             The new BTC balance should be 1.66 ETH, and new LTC blaance should be 0.825 ETH
         */
-        //        assert(1 < address(amm).balance);
+
         uint256 beforeBalanceBTC = mockBTC.balanceOf(address(rebalancer));
         uint256 beforeBalanceLTC = mockLTC.balanceOf(address(rebalancer));
+
+        uint256 beforeBalanceBTC_ETH = rebalancer.btcDeposit();
+        uint256 beforeBalanceLTC_ETH = rebalancer.ltcDeposit();
+
         rebalancer.rebalance();
+
         // we sold some BTC for LTC
         require(mockBTC.balanceOf(address(rebalancer)) < beforeBalanceBTC);
         require(beforeBalanceLTC < mockLTC.balanceOf(address(rebalancer)));
         assert(0 == rebalancer.getBalance());
 
-        //        assert(rebalancer.totalDeposits() <= 2.5 ether);
+
+        // Should update the internal state of the balance, we know have more ETH in the LTC, and same with BTC.
+        require(mockBTC.balanceOf(address(rebalancer)) < beforeBalanceBTC);
+        require(
+            beforeBalanceBTC_ETH < rebalancer.btcDeposit()
+        );
+        require(
+            beforeBalanceLTC_ETH < rebalancer.ltcDeposit()
+        );
+    }
+
+    function testShouldWithdrawCorrectly() public { 
+        /**
+            User deposit 1 ETH with exposure to BTC only.
+            BTC goes up 100%
+            User should be able to withdraw more 2 ETH.
+         */
     }
 }
