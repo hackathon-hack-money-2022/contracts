@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {AMM} from "./abstract/AMM.sol";
 import "forge-std/console.sol";
 
-contract Hello {
+contract Rebalancer {
     // Total percentage of the entire contract
     uint256 btcPercentage;
     uint256 ltcPercentage;
@@ -12,13 +12,7 @@ contract Hello {
     // Deposited amount with total exposure in ETH
     uint256 public btcDeposit;
     uint256 public ltcDeposit;
-    //    uint256 public totalDeposits;
 
-    /*
-    // Previous ETH -> Token price
-    uint256 public previousBtcPrice;
-    uint256 public previousLtcPrice;
-*/
     AMM amm;
 
     mapping(address => uint256) public btcExposure;
@@ -26,10 +20,6 @@ contract Hello {
 
     constructor(AMM _amm) {
         amm = _amm;
-        /*
-        previousBtcPrice = _amm.getLatestPrice("BTC");
-        previousLtcPrice = _amm.getLatestPrice("LTC");
-*/
     }
 
     function hello() public pure returns (uint256) {
@@ -41,15 +31,9 @@ contract Hello {
         payable
         returns (uint256)
     {
-        console.log(address(this));
-        console.log(msg.value);
-        console.log(address(this).balance);
-
         require(portfolio.btc + portfolio.ltc == 100);
         require(0 < msg.value);
-        /*            uint256 exposureBtc = portfolio.btc * msg.value;
-        uint256 exposureLtc = portfolio.ltc * msg.value;
-*/
+
         uint256 senderBtcDeposit = (portfolio.btc * msg.value) / 100;
         uint256 newBtcDeposit = btcDeposit + senderBtcDeposit;
 
@@ -71,7 +55,6 @@ contract Hello {
 
         btcDeposit = newBtcDeposit;
         ltcDeposit = newLtcDeposit;
-        // totalDeposits = newTotalDeposits;
 
         return msg.value;
     }
@@ -85,15 +68,7 @@ contract Hello {
             ((newLtcPrice + newBtcPrice))) * 100);
         uint256 btcWantedRatio = (((btcDeposit * 100) /
             (btcDeposit + ltcDeposit)) * 100);
-        /*
-        console.log('===============');
 
-        console.log(newBtcPrice);
-        console.log(newLtcPrice);
-
-        console.log(btcRatio);
-        console.log(btcWantedRatio);
-*/
         // hardcoded for now
         if (btcWantedRatio < btcRatio) {
             // TODO: Make this a variable tracked by the smart contract
@@ -101,6 +76,8 @@ contract Hello {
             uint256 ethChunks = ((newBtcPrice * (btcRatio - btcWantedRatio)) /
                 10000) / coinExposure;
 
+            // TODO: THis should update the exposoure to the assets. 
+            // Because of the value increase, we have more in both BTC and LTC.
             amm.swap("BTC", "ETH", ethChunks);
             amm.swap{value: this.getBalance()}("ETH", "LTC", ethChunks);
         }

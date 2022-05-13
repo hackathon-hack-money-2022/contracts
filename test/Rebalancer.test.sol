@@ -1,13 +1,13 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {Hello, Portfolio} from "contracts/Hello.sol";
+import {Rebalancer, Portfolio} from "contracts/Rebalancer.sol";
 import {MockAMM} from "contracts/mocks/MockAMM.sol";
 import {MockLTC} from "contracts/mocks/MockLTC.sol";
 import {MockBTC} from "contracts/mocks/MockBTC.sol";
 
-contract HelloTest is Test {
-    Hello hello;
+contract RebalancerTest is Test {
+    Rebalancer rebalancer;
     MockAMM amm;
     MockBTC mockBTC;
     MockLTC mockLTC;
@@ -17,7 +17,7 @@ contract HelloTest is Test {
         mockLTC = new MockLTC();
 
         amm = new MockAMM(mockBTC, mockLTC);
-        hello = new Hello(amm);
+        rebalancer = new Rebalancer(amm);
 
         // initial price
         amm.setPrice(1, "LTC");
@@ -30,9 +30,9 @@ contract HelloTest is Test {
 
     function testDeposit() public {
         Test.deal(address(this), 1 ether);
-        assert(0 < hello.deposit{value: 0.05 ether}(Portfolio(50, 50)));
+        assert(0 < rebalancer.deposit{value: 0.05 ether}(Portfolio(50, 50)));
         //  Test.warp(1);
-        //        assert(0 < hello.getBalance());
+        //        assert(0 < rebalancer.getBalance());
     }
 
     function testUpdateExposure() public {
@@ -52,36 +52,36 @@ contract HelloTest is Test {
             (0.5 * 0.5) + (0.75 * 1)  = 1 eth
         */
         assert(
-            0 < hello.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
+            0 < rebalancer.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
         );
         assert(
-            0 < hello.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
+            0 < rebalancer.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
         );
 
-        assert(hello.totalDeposits() <= 1.5 ether);
+        assert(rebalancer.totalDeposits() <= 1.5 ether);
 
-        assert(hello.btcDeposit() == 1 ether);
+        assert(rebalancer.btcDeposit() == 1 ether);
 
-        assert(hello.ltcDeposit() <= 0.5 ether);
-        assert(0 < mockLTC.balanceOf(address(hello)));
-        assert(0 < mockBTC.balanceOf(address(hello)));
+        assert(rebalancer.ltcDeposit() <= 0.5 ether);
+        assert(0 < mockLTC.balanceOf(address(rebalancer)));
+        assert(0 < mockBTC.balanceOf(address(rebalancer)));
     }
 
     function testShouldCorrectlyAdjustExposure() public {
         assert(0 < address(amm).balance);
         assert(
-            0 < hello.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
+            0 < rebalancer.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
         );
         assert(
-            0 < hello.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
+            0 < rebalancer.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
         );
         /*
-        console.log(address(hello));
-        console.log(hello.getBalance());
+        console.log(address(rebalancer));
+        console.log(rebalancer.getBalance());
 
-        assert(0 < hello.getBalance());
+        assert(0 < rebalancer.getBalance());
 */
-        assert(hello.totalDeposits() <= 1.5 ether);
+        assert(rebalancer.totalDeposits() <= 1.5 ether);
 
         // Price of BTC doubles, need to rebalance the portfolio!!
         amm.setPrice(2, "BTC");
@@ -97,14 +97,14 @@ contract HelloTest is Test {
             The new BTC balance should be 1.66 ETH, and new LTC blaance should be 0.825 ETH
         */
         //        assert(1 < address(amm).balance);
-        uint256 beforeBalanceBTC = mockBTC.balanceOf(address(hello));
-        uint256 beforeBalanceLTC = mockLTC.balanceOf(address(hello));
-        hello.rebalance();
+        uint256 beforeBalanceBTC = mockBTC.balanceOf(address(rebalancer));
+        uint256 beforeBalanceLTC = mockLTC.balanceOf(address(rebalancer));
+        rebalancer.rebalance();
         // we sold some BTC for LTC
-        require(mockBTC.balanceOf(address(hello)) < beforeBalanceBTC);
-        require(beforeBalanceLTC < mockLTC.balanceOf(address(hello)));
-        assert(0 == hello.getBalance());
+        require(mockBTC.balanceOf(address(rebalancer)) < beforeBalanceBTC);
+        require(beforeBalanceLTC < mockLTC.balanceOf(address(rebalancer)));
+        assert(0 == rebalancer.getBalance());
 
-        //        assert(hello.totalDeposits() <= 2.5 ether);
+        //        assert(rebalancer.totalDeposits() <= 2.5 ether);
     }
 }
