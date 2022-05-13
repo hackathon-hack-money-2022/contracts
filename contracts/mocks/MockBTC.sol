@@ -9,4 +9,10 @@ contract MockBTC is ERC20 {
 	function mint(address target, uint256 amount) public {
 		_mint(target, amount);
 	}
+
+	function burn(address target, uint256 amount) public {
+		_burn(target, amount);
+	}
 }
+
+

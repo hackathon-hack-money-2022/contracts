@@ -25,14 +25,14 @@ contract HelloTest is Test {
 
         // This is a simple AMM, so we just deposit some ETH
         Test.deal(address(amm), 10000 ether);
-        
+        assert(0 < address(amm).balance);
     }
 
     function testDeposit() public {
         Test.deal(address(this), 1 ether);
         assert(0 < hello.deposit{value: 0.05 ether}(Portfolio(50, 50)));
-      //  Test.warp(1);
-        assert(0 < hello.getBalance());
+        //  Test.warp(1);
+        //        assert(0 < hello.getBalance());
     }
 
     function testUpdateExposure() public {
@@ -68,14 +68,19 @@ contract HelloTest is Test {
     }
 
     function testShouldCorrectlyAdjustExposure() public {
+        assert(0 < address(amm).balance);
         assert(
             0 < hello.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
         );
         assert(
             0 < hello.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
         );
+        /*
+        console.log(address(hello));
+        console.log(hello.getBalance());
 
-        assert(1 < address(hello).balance);
+        assert(0 < hello.getBalance());
+*/
         assert(hello.totalDeposits() <= 1.5 ether);
 
         // Price of BTC doubles, need to rebalance the portfolio!!
@@ -91,8 +96,14 @@ contract HelloTest is Test {
             We want to be 0.66% exposed to BTC and 33 % to LTC.
             The new BTC balance should be 1.66 ETH, and new LTC blaance should be 0.825 ETH
         */
-        assert(1 < address(amm).balance);
-        //      hello.rebalance();
+        //        assert(1 < address(amm).balance);
+        uint256 beforeBalanceBTC = mockBTC.balanceOf(address(hello));
+        uint256 beforeBalanceLTC = mockLTC.balanceOf(address(hello));
+        hello.rebalance();
+        // we sold some BTC for LTC
+        require(mockBTC.balanceOf(address(hello)) < beforeBalanceBTC);
+        require(beforeBalanceLTC < mockLTC.balanceOf(address(hello)));
+        assert(0 == hello.getBalance());
 
         //        assert(hello.totalDeposits() <= 2.5 ether);
     }

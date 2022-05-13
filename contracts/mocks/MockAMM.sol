@@ -5,6 +5,7 @@ import "../abstract/AMM.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {MockBTC} from "./MockBTC.sol";
 import {MockLTC} from "./MockLTC.sol";
+import "forge-std/console.sol";
 
 /*
     This has to be changed, but it works for now.
@@ -26,24 +27,25 @@ contract MockAMM is AMM {
         uint256 amount
     ) public payable override returns (uint256) {
         // we mint based on the current price :=)
+        // We could assume that amount is always in ETH ?
 
         if (memcmp(bytes(toToken), bytes("BTC"))) {
-            mockBTC.mint(address(msg.sender), prices[toToken] * msg.value);
+            mockBTC.mint(address(msg.sender), amount * prices[toToken]);
         } else if (memcmp(bytes(toToken), bytes("LTC"))) {
-            mockLTC.mint(address(msg.sender), prices[toToken]);
-        } else if (memcmp(bytes(toToken), bytes("ETH"))) {
-            if (memcmp(bytes(fromToken), bytes("BTC"))) {
-                uint256 balanceEth = amount * this.getLatestPrice(fromToken);
-                payable(address(msg.sender)).send(1 ether);
-            } else {
-                revert("not implemented");
-            }
+            mockLTC.mint(address(msg.sender), amount * prices[toToken]);
+        } else if (memcmp(bytes(fromToken), bytes("BTC"))) {
+            uint256 price = prices["BTC"];
+            uint256 burnToken = amount * price;
+            mockBTC.burn(msg.sender, burnToken);
+            payable(address(msg.sender)).send(amount * price);
+            return amount;
         } else {
-            revert("ops");
+            revert("not implemented");
         }
     }
 
     function setPrice(uint256 _price, string memory token) public {
+        // set the price in ETH
         prices[token] = _price;
     }
 
@@ -53,7 +55,13 @@ contract MockAMM is AMM {
         override
         returns (uint256)
     {
-        return prices[token];
+        if (memcmp(bytes(token), bytes("BTC"))) {
+            return prices[token] * mockBTC.balanceOf(msg.sender);
+        } else if (memcmp(bytes(token), bytes("LTC"))) {
+            return prices[token] * mockLTC.balanceOf(msg.sender);
+        }
+
+        revert("");
     }
 
     function memcmp(bytes memory a, bytes memory b)

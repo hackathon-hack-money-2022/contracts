@@ -8,4 +8,9 @@ abstract contract AMM {
         public
         virtual
         returns (uint256);
+/*
+    function token0Price() public virtual view returns (uint256);
+
+    function token1Price() public virtual view returns (uint256);
+*/
 }
