@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {Rebalancer, Portfolio} from "contracts/Rebalancer.sol";
-import {MockAMM} from "contracts/mocks/MockAMM.sol";
+import {MockAMM, Tokens} from "contracts/mocks/MockAMM.sol";
 import {MockLTC} from "contracts/mocks/MockLTC.sol";
 import {MockBTC} from "contracts/mocks/MockBTC.sol";
 
@@ -20,8 +20,8 @@ contract RebalancerTest is Test {
         rebalancer = new Rebalancer(amm);
 
         // initial price
-        amm.setPrice(1, "LTC");
-        amm.setPrice(1, "BTC");
+        amm.setPrice(1, Tokens.LTC);
+        amm.setPrice(1, Tokens.BTC);
 
         // This is a simple AMM, so we just deposit some ETH
         Test.deal(address(amm), 10000 ether);
@@ -71,10 +71,10 @@ contract RebalancerTest is Test {
         assert(0 < mockBTC.balanceOf(address(rebalancer)));
     }
 
-    function skipTestShouldCorrectlyAdjustExposure() public {
+    function testShouldCorrectlyAdjustExposure() public {
         // initial price
-        amm.setPrice(1, "LTC");
-        amm.setPrice(1, "BTC");
+        amm.setPrice(1, Tokens.LTC);
+        amm.setPrice(1, Tokens.BTC);
 
         assert(0 < address(amm).balance);
         assert(
@@ -92,7 +92,7 @@ contract RebalancerTest is Test {
         assert(rebalancer.totalDeposits() <= 1.5 ether);
 
         // Price of BTC doubles, need to rebalance the portfolio!!
-        amm.setPrice(2, "BTC");
+        amm.setPrice(2, Tokens.BTC);
         /*
             Our original deposit was 1 ETH in BTC, and 0.5 ETH in LTC.
 
@@ -112,7 +112,6 @@ contract RebalancerTest is Test {
         uint256 beforeBalanceLTC_ETH = rebalancer.ltcDeposit();
 
         rebalancer.rebalance();
-
         // we sold some BTC for LTC
         require(mockBTC.balanceOf(address(rebalancer)) < beforeBalanceBTC);
         require(beforeBalanceLTC < mockLTC.balanceOf(address(rebalancer)));
@@ -132,8 +131,8 @@ contract RebalancerTest is Test {
          */
 
         // initial price
-        amm.setPrice(100, "LTC");
-        amm.setPrice(100, "BTC");
+        amm.setPrice(100, Tokens.LTC);
+        amm.setPrice(100, Tokens.BTC);
 
         assert(
             0 <
@@ -146,13 +145,14 @@ contract RebalancerTest is Test {
             0.5 ETH in BTC
             0.5 ETH in LTC
         */
-        amm.setPrice(200, "BTC");
-        rebalancer.rebalance();
+        amm.setPrice(200, Tokens.BTC);
         /*
-            Balance should now be 1.5 ETH
+            After re-balance the balance should be 1.5 ETH
             0.75 ETH in BTC
             0.75 ETH in LTC
         */
+
+        rebalancer.rebalance();
         uint256 depositBefore = rebalancer.totalDeposits();
         uint256 withdraw = rebalancer.withdraw(0);
         assert(rebalancer.totalDeposits() < depositBefore);
@@ -167,8 +167,8 @@ contract RebalancerTest is Test {
          */
 
         // initial price
-        amm.setPrice(100, "LTC");
-        amm.setPrice(100, "BTC");
+        amm.setPrice(100, Tokens.LTC);
+        amm.setPrice(100, Tokens.BTC);
 
         assert(
             0 <
@@ -181,7 +181,7 @@ contract RebalancerTest is Test {
             0.5 ETH in BTC
             0.5 ETH in LTC
         */
-        amm.setPrice(50, "BTC");
+        amm.setPrice(50, Tokens.BTC);
         rebalancer.rebalance();
         /*
             Balance should now be 0.75 ETH

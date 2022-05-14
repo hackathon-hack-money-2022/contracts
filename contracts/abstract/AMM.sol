@@ -3,17 +3,17 @@ pragma solidity ^0.8.0;
 
 abstract contract AMM {
     function swap(
-        string memory fromToken,
-        string memory toToken,
+        Tokens fromToken,
+        Tokens toToken,
         uint256 amount
     ) public payable virtual returns (uint256);
 
-    function getLatestPrice(string memory token)
+    function getLatestPrice(Tokens token)
         public
         virtual
         returns (uint256);
 
-    function getLatestHoldingPrice(string memory token)
+    function getLatestHoldingPrice(Tokens token)
         public
         virtual
         returns (uint256);
@@ -23,4 +23,10 @@ abstract contract AMM {
 
     function token1Price() public virtual view returns (uint256);
 */
+}
+
+enum Tokens {
+    BTC,
+    LTC,
+    ETH
 }

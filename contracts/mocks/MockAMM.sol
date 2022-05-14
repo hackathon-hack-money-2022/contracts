@@ -5,13 +5,15 @@ import "../abstract/AMM.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import {MockBTC} from "./MockBTC.sol";
 import {MockLTC} from "./MockLTC.sol";
+import {MockToken} from "./MockToken.sol";
 import "forge-std/console.sol";
 
 /*
     This has to be changed, but it works for now.
  */
 contract MockAMM is AMM {
-    mapping(string => uint256) prices;
+    mapping(Tokens => uint256) prices;
+    mapping(Tokens => MockToken) tokens;
 
     MockBTC mockBTC;
     MockLTC mockLTC;
@@ -19,77 +21,59 @@ contract MockAMM is AMM {
     constructor(MockBTC _mockBTC, MockLTC _mockLTC) {
         mockBTC = _mockBTC;
         mockLTC = _mockLTC;
+
+        tokens[Tokens.BTC] = mockBTC;
+        tokens[Tokens.LTC] = mockLTC;
     }
 
     function swap(
-        string memory fromToken,
-        string memory toToken,
+        Tokens fromToken,
+        Tokens toToken,
         uint256 amount
     ) public payable override returns (uint256) {
         // we mint based on the current price :=)
         // We could assume that amount is always in ETH ?
+        if (fromToken == Tokens.ETH) {
+            tokens[toToken].mint(address(msg.sender), amount * prices[toToken]);
+        } else if (fromToken != Tokens.ETH) {
+            uint256 price = prices[fromToken];
+            uint256 burnToken = amount / price;
 
-        if (memcmp(bytes(toToken), bytes("BTC"))) {
-            mockBTC.mint(address(msg.sender), amount * prices[toToken]);
-        } else if (memcmp(bytes(toToken), bytes("LTC"))) {
-            mockLTC.mint(address(msg.sender), amount * prices[toToken]);
-        } else if (memcmp(bytes(fromToken), bytes("BTC"))) {
-            uint256 price = prices["BTC"];
-            uint256 burnToken = amount * price;
-         //   mockBTC.burn(msg.sender, burnToken);
+            tokens[fromToken].burn(msg.sender, burnToken);
             payable(address(msg.sender)).send(amount * price);
-            return amount;
-        } else if (memcmp(bytes(fromToken), bytes("LTC"))) {
-            uint256 price = prices["LTC"];
-            uint256 burnToken = amount * price;
-         //   mockBTC.burn(msg.sender, burnToken);
-            payable(address(msg.sender)).send(amount * price);
-            return amount;
         } else {
             revert("not implemented");
         }
+
+        return 0;
     }
 
-    function setPrice(uint256 _price, string memory token) public {
+    function setPrice(uint256 _price, Tokens token) public {
         // set the price in ETH
         prices[token] = _price;
     }
 
-    function getLatestPrice(string memory token)
+    function getLatestPrice(Tokens token)
         public
         view
         override
         returns (uint256)
     {
-        if (memcmp(bytes(token), bytes("BTC"))) {
-            return prices[token];
-        } else if (memcmp(bytes(token), bytes("LTC"))) {
-            return prices[token];
-        }
-
-        revert("");
+        return prices[token];
     }
 
-    function getLatestHoldingPrice(string memory token)
+    function getLatestHoldingPrice(Tokens token)
         public
         view
         override
         returns (uint256)
     {
-        if (memcmp(bytes(token), bytes("BTC"))) {
+        if (token == Tokens.BTC) {
             return prices[token] * mockBTC.balanceOf(msg.sender);
-        } else if (memcmp(bytes(token), bytes("LTC"))) {
+        } else if (token == Tokens.LTC) {
             return prices[token] * mockLTC.balanceOf(msg.sender);
+        } else {
+            revert("Error");
         }
-
-        revert("");
-    }
-
-    function memcmp(bytes memory a, bytes memory b)
-        internal
-        pure
-        returns (bool)
-    {
-        return (a.length == b.length) && (keccak256(a) == keccak256(b));
     }
 }
