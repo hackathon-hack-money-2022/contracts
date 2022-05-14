@@ -15,8 +15,7 @@ contract Rebalancer {
 
     AMM amm;
 
-    mapping(address => uint256) public btcExposure;
-    mapping(address => uint256) public ltcExposure;
+    mapping(address => PortfolioT0[]) public portfolioT0;
 
     constructor(AMM _amm) {
         amm = _amm;
@@ -49,8 +48,14 @@ contract Rebalancer {
         amm.swap{value: senderBtcDeposit}("ETH", "BTC", senderBtcDeposit);
         amm.swap{value: senderLTcDeposit}("ETH", "LTC", senderLTcDeposit);
 
-        btcExposure[msg.sender] = amm.getLatestPrice('BTC');
-        ltcExposure[msg.sender] = amm.getLatestPrice('LTC');
+        portfolioT0[msg.sender].push(
+            PortfolioT0({
+                btc: amm.getLatestPrice("BTC"),
+                ltc: amm.getLatestPrice("LTC"),
+                ethDeposit: msg.value,
+                portfolio: portfolio
+            })
+        );
 
         btcDeposit = newBtcDeposit;
         ltcDeposit = newLtcDeposit;
@@ -60,8 +65,8 @@ contract Rebalancer {
 
     function rebalance() public payable returns (bool) {
         // output should be price in ETH
-        uint256 newBtcPrice = amm.getLatestPrice("BTC");
-        uint256 newLtcPrice = amm.getLatestPrice("LTC");
+        uint256 newBtcPrice = amm.getLatestHoldingPrice("BTC");
+        uint256 newLtcPrice = amm.getLatestHoldingPrice("LTC");
 
         uint256 btcRatio = (((newBtcPrice * 100) /
             ((newLtcPrice + newBtcPrice))) * 100);
@@ -85,7 +90,7 @@ contract Rebalancer {
         }
     }
 
-    function withdraw() public pure returns (uint256) {
+    function withdraw(uint256 portfolioIndex) public returns (uint256) {
         /*
             Based on the user exposure to an asset, and the value changed, we then calculate the 
             winnings.
@@ -93,7 +98,6 @@ contract Rebalancer {
             Might be a bit more complicated, we will see :)
          */
         //revert("Not implemented");
-
         /**
             t_0 = buy 1 BTC for 1 ETH
             t_1 = price of BTC goes to 2
@@ -106,7 +110,39 @@ contract Rebalancer {
             
             -> 
          */
+        // TODO: This should be a variable when creating the portfolio
+        uint256 numberOfCoins = 2;
 
+        PortfolioT0 storage portfolio = portfolioT0[msg.sender][portfolioIndex];
+        uint256 deposited = portfolio.ethDeposit;
+        uint256 deltaBtc = (amm.getLatestPrice("BTC") - portfolio.btc) /
+            portfolio.btc;
+        uint256 deltaLtc = (amm.getLatestPrice("LTC") - portfolio.ltc);
+
+        uint256 deltaExposure = 0;
+        deltaExposure += (deltaBtc * 100) / numberOfCoins;
+
+        console.log(deltaExposure);
+        console.log(portfolio.btc);
+        console.log(deposited);
+
+        uint256 adjustedBtc = (((
+            (deposited * (portfolio.btc + deltaExposure))
+        ) / 100) * portfolio.portfolio.btc) / 100;
+        uint256 adjustedLtc = (((
+            (deposited * (portfolio.ltc + deltaExposure))
+        ) / 100) * portfolio.portfolio.ltc) / 100;
+
+        btcDeposit -= adjustedBtc;
+        ltcDeposit -= adjustedLtc;
+
+        console.log(adjustedLtc);
+        console.log(adjustedLtc);
+
+        amm.swap("BTC", "ETH", adjustedBtc);
+        amm.swap("LTC", "ETH", adjustedLtc);
+
+        return adjustedBtc + adjustedLtc;
     }
 
     function getBalance() public view returns (uint256) {
@@ -121,4 +157,11 @@ contract Rebalancer {
 struct Portfolio {
     uint8 btc;
     uint8 ltc;
+}
+
+struct PortfolioT0 {
+    uint256 ethDeposit;
+    uint256 btc;
+    uint256 ltc;
+    Portfolio portfolio;
 }

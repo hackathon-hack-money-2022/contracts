@@ -36,7 +36,13 @@ contract MockAMM is AMM {
         } else if (memcmp(bytes(fromToken), bytes("BTC"))) {
             uint256 price = prices["BTC"];
             uint256 burnToken = amount * price;
-            mockBTC.burn(msg.sender, burnToken);
+         //   mockBTC.burn(msg.sender, burnToken);
+            payable(address(msg.sender)).send(amount * price);
+            return amount;
+        } else if (memcmp(bytes(fromToken), bytes("LTC"))) {
+            uint256 price = prices["LTC"];
+            uint256 burnToken = amount * price;
+         //   mockBTC.burn(msg.sender, burnToken);
             payable(address(msg.sender)).send(amount * price);
             return amount;
         } else {
@@ -50,6 +56,21 @@ contract MockAMM is AMM {
     }
 
     function getLatestPrice(string memory token)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        if (memcmp(bytes(token), bytes("BTC"))) {
+            return prices[token];
+        } else if (memcmp(bytes(token), bytes("LTC"))) {
+            return prices[token];
+        }
+
+        revert("");
+    }
+
+    function getLatestHoldingPrice(string memory token)
         public
         view
         override

@@ -50,10 +50,16 @@ contract RebalancerTest is Test {
             (0.5 * 0.5) + (0.75 * 1)  = 1 eth
         */
         assert(
-            0 < rebalancer.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
+            0 <
+                rebalancer.deposit{value: 0.5 ether}(
+                    Portfolio({ltc: 50, btc: 50})
+                )
         );
         assert(
-            0 < rebalancer.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
+            0 <
+                rebalancer.deposit{value: 1 ether}(
+                    Portfolio({ltc: 25, btc: 75})
+                )
         );
 
         assert(rebalancer.totalDeposits() <= 1.5 ether);
@@ -65,13 +71,23 @@ contract RebalancerTest is Test {
         assert(0 < mockBTC.balanceOf(address(rebalancer)));
     }
 
-    function testShouldCorrectlyAdjustExposure() public {
+    function skipTestShouldCorrectlyAdjustExposure() public {
+        // initial price
+        amm.setPrice(1, "LTC");
+        amm.setPrice(1, "BTC");
+
         assert(0 < address(amm).balance);
         assert(
-            0 < rebalancer.deposit{value: 0.5 ether}(Portfolio({ltc: 50, btc: 50}))
+            0 <
+                rebalancer.deposit{value: 0.5 ether}(
+                    Portfolio({ltc: 50, btc: 50})
+                )
         );
         assert(
-            0 < rebalancer.deposit{value: 1 ether}(Portfolio({ltc: 25, btc: 75}))
+            0 <
+                rebalancer.deposit{value: 1 ether}(
+                    Portfolio({ltc: 25, btc: 75})
+                )
         );
         assert(rebalancer.totalDeposits() <= 1.5 ether);
 
@@ -102,22 +118,44 @@ contract RebalancerTest is Test {
         require(beforeBalanceLTC < mockLTC.balanceOf(address(rebalancer)));
         assert(0 == rebalancer.getBalance());
 
-
         // Should update the internal state of the balance, we know have more ETH in the LTC, and same with BTC.
         require(mockBTC.balanceOf(address(rebalancer)) < beforeBalanceBTC);
-        require(
-            beforeBalanceBTC_ETH < rebalancer.btcDeposit()
-        );
-        require(
-            beforeBalanceLTC_ETH < rebalancer.ltcDeposit()
-        );
+        require(beforeBalanceBTC_ETH < rebalancer.btcDeposit());
+        require(beforeBalanceLTC_ETH < rebalancer.ltcDeposit());
     }
 
-    function testShouldWithdrawCorrectly() public { 
+    function testShouldWithdrawCorrectlySingleUser() public {
         /**
             User deposit 1 ETH with exposure to BTC only.
             BTC goes up 100%
             User should be able to withdraw more 2 ETH.
          */
+
+        // initial price
+        amm.setPrice(100, "LTC");
+        amm.setPrice(100, "BTC");
+
+        assert(
+            0 <
+                rebalancer.deposit{value: 1 ether}(
+                    Portfolio({ltc: 50, btc: 50})
+                )
+        );
+        /*
+            Balance should now be 1 ETH
+            0.5 ETH in BTC
+            0.5 ETH in LTC
+        */
+        amm.setPrice(200, "BTC");
+        rebalancer.rebalance();
+        /*
+            Balance should now be 1.5 ETH
+            0.75 ETH in BTC
+            0.75 ETH in LTC
+        */
+        uint256 depositBefore = rebalancer.totalDeposits();
+        uint256 withdraw = rebalancer.withdraw(0);
+        assert(rebalancer.totalDeposits() < depositBefore);
+        assert(1.5 ether == withdraw);
     }
 }
