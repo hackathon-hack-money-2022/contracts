@@ -115,34 +115,78 @@ contract Rebalancer {
 
         PortfolioT0 storage portfolio = portfolioT0[msg.sender][portfolioIndex];
         uint256 deposited = portfolio.ethDeposit;
-        uint256 deltaBtc = (amm.getLatestPrice("BTC") - portfolio.btc) /
-            portfolio.btc;
-        uint256 deltaLtc = (amm.getLatestPrice("LTC") - portfolio.ltc);
+        /*        uint256 deltaBtc = getAdjustedDelta(
+            amm.getLatestPrice("BTC"),
+            portfolio.btc
+        );*/
 
-        uint256 deltaExposure = 0;
-        deltaExposure += (deltaBtc * 100) / numberOfCoins;
+        int256 deltaBtc = getAdjustedDelta(
+            amm.getLatestPrice("BTC"),
+            portfolio.btc
+        );
+        int256 deltaLtc = getAdjustedDelta(
+            amm.getLatestPrice("LTC"),
+            portfolio.ltc
+        );
 
-        console.log(deltaExposure);
-        console.log(portfolio.btc);
-        console.log(deposited);
+        int256 deltaExposure = deltaBtc / 2;
+        uint256 uDeltaExposure = deltaExposure < 0
+            ? uint256(-deltaExposure)
+            : uint256(deltaExposure);
 
-        uint256 adjustedBtc = (((
-            (deposited * (portfolio.btc + deltaExposure))
-        ) / 100) * portfolio.portfolio.btc) / 100;
-        uint256 adjustedLtc = (((
-            (deposited * (portfolio.ltc + deltaExposure))
-        ) / 100) * portfolio.portfolio.ltc) / 100;
+        uint256 adjustedBtc = getAdjustedAmount(
+            deposited,
+            portfolio.btc,
+            portfolio.portfolio.btc,
+            uDeltaExposure,
+            deltaExposure < 0
+        );
+
+        uint256 adjustedLtc = getAdjustedAmount(
+            deposited,
+            portfolio.ltc,
+            portfolio.portfolio.ltc,
+            uDeltaExposure,
+            deltaExposure < 0
+        );
+        console.log(adjustedLtc);
 
         btcDeposit -= adjustedBtc;
         ltcDeposit -= adjustedLtc;
-
-        console.log(adjustedLtc);
-        console.log(adjustedLtc);
 
         amm.swap("BTC", "ETH", adjustedBtc);
         amm.swap("LTC", "ETH", adjustedLtc);
 
         return adjustedBtc + adjustedLtc;
+    }
+
+    function getAdjustedDelta(uint256 currentPrice, uint256 entryPrice)
+        private
+        view
+        returns (int256)
+    {
+        if (entryPrice <= currentPrice) {
+            return int256(((currentPrice - entryPrice) * 100) / entryPrice);
+        } else {
+            return -int256(((currentPrice * 100) / entryPrice));
+        }
+    }
+
+    function getAdjustedAmount(
+        uint256 deposited,
+        uint256 assetEntryPrice,
+        uint256 assetEntryExposure,
+        uint256 deltaExposure,
+        bool isNegativeDelta
+    ) private returns (uint256) {
+        if (isNegativeDelta) {
+            return
+                ((((deposited * (assetEntryPrice - deltaExposure))) / 100) *
+                    assetEntryExposure) / 100;
+        }
+        return
+            ((((deposited * (assetEntryPrice + deltaExposure))) / 100) *
+                assetEntryExposure) / 100;
     }
 
     function getBalance() public view returns (uint256) {

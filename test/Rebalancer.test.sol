@@ -124,11 +124,11 @@ contract RebalancerTest is Test {
         require(beforeBalanceLTC_ETH < rebalancer.ltcDeposit());
     }
 
-    function testShouldWithdrawCorrectlySingleUser() public {
+    function testShouldWithdrawCorrectlySingleUserMarketUp() public {
         /**
-            User deposit 1 ETH with exposure to BTC only.
+            User deposit 1 ETH with exposure to LTC and BTC 50/50.
             BTC goes up 100%
-            User should be able to withdraw more 2 ETH.
+            User should be able to withdraw 1.5 ETH.
          */
 
         // initial price
@@ -157,5 +157,40 @@ contract RebalancerTest is Test {
         uint256 withdraw = rebalancer.withdraw(0);
         assert(rebalancer.totalDeposits() < depositBefore);
         assert(1.5 ether == withdraw);
+    }
+
+    function testShouldWithdrawCorrectlySingleUserMarketDown() public {
+        /**
+            User deposit 1 ETH with exposure to BTC and LTC 50/50.
+            BTC down 50%
+            User should be able to withdraw more 0.75 ETH.
+         */
+
+        // initial price
+        amm.setPrice(100, "LTC");
+        amm.setPrice(100, "BTC");
+
+        assert(
+            0 <
+                rebalancer.deposit{value: 1 ether}(
+                    Portfolio({ltc: 50, btc: 50})
+                )
+        );
+        /*
+            Balance should now be 1 ETH
+            0.5 ETH in BTC
+            0.5 ETH in LTC
+        */
+        amm.setPrice(50, "BTC");
+        rebalancer.rebalance();
+        /*
+            Balance should now be 0.75 ETH
+            0.375 ETH in BTC
+            0.375 ETH in LTC
+        */
+        uint256 depositBefore = rebalancer.totalDeposits();
+        uint256 withdraw = rebalancer.withdraw(0);
+        assert(rebalancer.totalDeposits() < depositBefore);
+        assert(0.75 ether == withdraw);
     }
 }
