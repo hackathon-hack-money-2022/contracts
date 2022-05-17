@@ -24,19 +24,12 @@ contract UniswapAMM is AMM {
     ) public payable override returns (uint256) {
         // https://docs.uniswap.org/protocol/guides/swaps/single-swaps
 
-        uint256 amountIn = 256;
-
-        // Transfer the specified amount of DAI to this contract.
-        TransferHelper.safeTransferFrom(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, msg.sender, address(this), amountIn);
-        /*
-        // Approve the router to spend DAI.
-        TransferHelper.safeApprove(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, address(UNISWAP_ROUTER_ADDRESS), amountIn);
 
         uint256 deadline = block.timestamp + 15;
         ISwapRouter.ExactInputSingleParams memory params =
             ISwapRouter.ExactInputSingleParams({
-            tokenIn: 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1,
-            tokenOut: 0x4200000000000000000000000000000000000006,
+            tokenIn: 0x4200000000000000000000000000000000000006,
+            tokenOut: 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1,
             fee: 3000,
             recipient: msg.sender,
             deadline: block.timestamp,
@@ -47,6 +40,15 @@ contract UniswapAMM is AMM {
         uniswapRouter.exactInputSingle(
             params
         );
+
+
+   //     uint256 amountIn = 256;
+
+        // Transfer the specified amount of DAI to this contract.
+ //       TransferHelper.safeTransferFrom(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, msg.sender, address(this), amountIn);
+        /*
+        // Approve the router to spend DAI.
+        TransferHelper.safeApprove(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, address(UNISWAP_ROUTER_ADDRESS), amountIn);
         */
 
         /*

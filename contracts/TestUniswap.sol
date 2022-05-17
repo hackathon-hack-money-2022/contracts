@@ -19,13 +19,27 @@ contract TestUniswap {
         0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
 
     function hello() public {
-        uint256 amountIn = 256;
+                ISwapRouter.ExactInputSingleParams memory params =
+            ISwapRouter.ExactInputSingleParams({
+            tokenIn: 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1,
+            tokenOut: 0x4200000000000000000000000000000000000006,
+            fee: 3000,
+            recipient: msg.sender,
+            deadline: deadline,
+            amountIn: amountIn,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        });
+        uniswapRouter.exactInputSingle(
+            params
+        );
+   //     uint256 amountIn = 256;
         // something fails inis
       //  TransferHelper.safeTransferFrom(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, msg.sender, address(this), amountIn);
     }
 
     function setAllowance() public {
-        ERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1).approve(address(this), 250);
+ //       ERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1).approve(address(this), 250);
     }
 }
 
