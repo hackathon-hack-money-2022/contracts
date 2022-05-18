@@ -31,8 +31,12 @@ contract MockAMM is AMM {
         Tokens toToken,
         uint256 amount
     ) public payable override returns (uint256) {
-        // we mint based on the current price :=)
-        // We could assume that amount is always in ETH ?
+        /* 
+        This mocking is incomplete, missing
+            - ERC20 transfer logic.
+            - Should enforce balance check of swap from token.
+            - Should use x * y = z formula to simulate Uniswap
+        */
         if (fromToken == Tokens.ETH) {
             tokens[toToken].mint(address(msg.sender), amount * prices[toToken]);
         } else if (fromToken != Tokens.ETH) {

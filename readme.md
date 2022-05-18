@@ -31,3 +31,9 @@
     - I think the problem was that the wrong interface was used for the router
         - https://kovan-optimistic.etherscan.io/tx/0x87ee2fc4335d9000818cdb6bd03a98ede6981672cc510559f968bcc4aee2c99b
         
+### Rip - the price oracle for uniswap is actually not onchain
+- could do something like https://stackoverflow.com/a/71815432
+    - Requires user to interact :(
+- Never mind should be able to use reserve0/reserve1, but it is on pool level. I think this is ok, but we need to use liquid pool as the oracle.
+    - https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
+    

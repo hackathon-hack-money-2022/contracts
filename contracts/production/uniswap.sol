@@ -33,41 +33,14 @@ contract UniswapAMM is AMM {
             fee: 3000,
             recipient: msg.sender,
             deadline: block.timestamp,
-            amountIn: amountIn,
+            amountIn: amount,
             amountOutMinimum: 0,
             sqrtPriceLimitX96: 0
         });
         uniswapRouter.exactInputSingle(
             params
         );
-
-
-   //     uint256 amountIn = 256;
-
-        // Transfer the specified amount of DAI to this contract.
- //       TransferHelper.safeTransferFrom(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, msg.sender, address(this), amountIn);
-        /*
-        // Approve the router to spend DAI.
-        TransferHelper.safeApprove(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1, address(UNISWAP_ROUTER_ADDRESS), amountIn);
-        */
-
-        /*
-        uniswapRouter.swapExactTokensForTokens(
-            10,
-            10,
-            getPathForETHtoDAI(),
-            0x5eE99870B0bfaaA76Ff583659e66AfE10C783383,
-            deadline
-        );*/
         return 0;
-    }
-
-    function getPathForETHtoDAI() private view returns (address[] memory) {
-        address[] memory path = new address[](2);
-        path[0] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
-        path[1] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
-
-        return path;
     }
 
     function getLatestPrice(Tokens token)

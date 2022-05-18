@@ -8,4 +8,3 @@ abstract contract MockToken is ERC20 {
 
     function burn(address target, uint256 amount) public virtual;
 }
-

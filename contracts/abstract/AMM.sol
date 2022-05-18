@@ -8,21 +8,12 @@ abstract contract AMM {
         uint256 amount
     ) public payable virtual returns (uint256);
 
-    function getLatestPrice(Tokens token)
-        public
-        virtual
-        returns (uint256);
+    function getLatestPrice(Tokens token) public virtual returns (uint256);
 
     function getLatestHoldingPrice(Tokens token)
         public
         virtual
         returns (uint256);
-
-    /*
-    function token0Price() public virtual view returns (uint256);
-
-    function token1Price() public virtual view returns (uint256);
-*/
 }
 
 enum Tokens {
