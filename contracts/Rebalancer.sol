@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {AMM, Tokens} from "./abstract/AMM.sol";
 import "forge-std/console.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract Rebalancer {
     // Deposited amount with total exposure in ETH
@@ -74,8 +75,12 @@ contract Rebalancer {
 
     function rebalance() public {
         // output should be price in ETH
-        uint256 newBtcPrice = amm.getLatestHoldingPrice(Tokens.BTC);
-        uint256 newLtcPrice = amm.getLatestHoldingPrice(Tokens.LTC);
+        uint256 newBtcPrice = ERC20(amm.getTokenAddress(Tokens.BTC)).balanceOf(
+            address(this)
+        ) * amm.getLatestPrice(Tokens.BTC);
+        uint256 newLtcPrice = ERC20(amm.getTokenAddress(Tokens.LTC)).balanceOf(
+            address(this)
+        ) * amm.getLatestPrice(Tokens.LTC);
 
         uint256 newTotalPrice = newBtcPrice + newLtcPrice;
 

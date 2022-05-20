@@ -10,14 +10,19 @@ abstract contract AMM {
 
     function getLatestPrice(Tokens token) public virtual returns (uint256);
 
-    function getLatestHoldingPrice(Tokens token)
+    function getTokenAddress(Tokens token)
         public
         virtual
-        returns (uint256);
+        returns (address);
 }
 
 enum Tokens {
+    // Only used in test, but wrapped tokens could be used
     BTC,
-    LTC,
-    ETH
+    // Only used in test, but wrapped tokens could be used
+    LTC, 
+    // Production tokens
+    ETH,
+    DAI,
+    SNX
 }

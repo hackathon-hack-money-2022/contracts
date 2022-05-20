@@ -9,8 +9,8 @@ import {MockToken} from "./MockToken.sol";
 import "forge-std/console.sol";
 
 /*
-    This has to be changed, but it works for now.
- */
+    This has to be changed, but it works as a proof of concept.
+*/
 contract MockAMM is AMM {
     mapping(Tokens => uint256) prices;
     mapping(Tokens => MockToken) tokens;
@@ -66,18 +66,12 @@ contract MockAMM is AMM {
         return prices[token];
     }
 
-    function getLatestHoldingPrice(Tokens token)
+    function getTokenAddress(Tokens token)
         public
         view
         override
-        returns (uint256)
+        returns (address)
     {
-        if (token == Tokens.BTC) {
-            return prices[token] * mockBTC.balanceOf(msg.sender);
-        } else if (token == Tokens.LTC) {
-            return prices[token] * mockLTC.balanceOf(msg.sender);
-        } else {
-            revert("Error");
-        }
+        return address(tokens[token]);
     }
 }
