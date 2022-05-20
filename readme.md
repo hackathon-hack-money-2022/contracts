@@ -2,19 +2,23 @@
 
 
 ### Links
-- [] https://kovan-optimistic.etherscan.io/address/0x5ee99870b0bfaaa76ff583659e66afe10c783383
+- https://kovan-optimistic.etherscan.io/address/0x5ee99870b0bfaaa76ff583659e66afe10c783383
     - Address of the "owner"
 
 ### Foundry
 - https://book.getfoundry.sh/cheatcodes/deal.html?highlight=deal(#deal
 
+
 ### Uniswap
-- https://docs.uniswap.org/protocol/reference/deployments
-- https://docs.uniswap.org/protocol/reference/periphery/SwapRouter
-- https://kovan-optimistic.etherscan.io/address/0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45#code
-    - SwapRouter02
-- https://soliditydeveloper.com/uniswap2
-- https://blockchain.oodles.io/dev-blog/utilizing-the-new-uniswap-v2-in-your-smart-contract/
+- SwapRouter
+    - https://kovan-optimistic.etherscan.io/address/0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45#code
+
+- Docs / Info
+    - https://docs.uniswap.org/protocol/reference/deployments
+    - https://docs.uniswap.org/protocol/reference/periphery/SwapRouter
+        - SwapRouter02
+    - https://soliditydeveloper.com/uniswap2
+    - https://blockchain.oodles.io/dev-blog/utilizing-the-new-uniswap-v2-in-your-smart-contract/
 
 ### Uniswap tx
 - https://kovan-optimistic.etherscan.io/tx/0xd7ecf64e0e202fb8708762f5a3e8009d6a58c4308c4a52725e5d210060e5068e
@@ -36,4 +40,6 @@
     - Requires user to interact :(
 - Never mind should be able to use reserve0/reserve1, but it is on pool level. I think this is ok, but we need to use liquid pool as the oracle.
     - https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
-    
+- I knew I had miscalled something, it's even in the uniswap v3 whitepaper. 
+    - https://docs.uniswap.org/protocol/concepts/V3-overview/oracle    
+

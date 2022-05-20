@@ -4,3 +4,4 @@ out
 cache
 mnemonic.txt
 deploy.sh
+inspect.sh
