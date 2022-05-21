@@ -55,6 +55,11 @@ contract UniswapAMM is AMM {
                 address(this),
                 amount
             );
+            TransferHelper.safeApprove(
+                tokenAddress[fromToken],
+                address(UNISWAP_ROUTER_ADDRESS),
+                amount
+            );
         }
 
         IV3SwapRouter.ExactInputSingleParams memory params = IV3SwapRouter
@@ -69,7 +74,7 @@ contract UniswapAMM is AMM {
             });
 
         uint256 sentAmount = isNotFromETH ? 0 : msg.value;
-  //     uniswapRouter.exactInputSingle{value: sentAmount}(params);
+        uniswapRouter.exactInputSingle{value: sentAmount}(params);
 
         return 0;
     }

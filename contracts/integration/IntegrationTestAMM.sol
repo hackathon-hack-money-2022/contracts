@@ -30,7 +30,7 @@ contract IntegrationTestAMM {
         address addr = amm.tokenAddress(Tokens.DAI);
 
         require(
-            ERC20(addr).approve(address(amm), 100) == true,
+            ERC20(addr).approve(address(amm), 20000000000000000000) == true,
             "failed increase allowance"
         );
     }
