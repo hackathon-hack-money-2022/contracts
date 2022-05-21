@@ -1,1 +1,1 @@
-forge inspect -c ./contracts/ TestUniswap abi
+forge inspect -c ./contracts/ Rebalancer abi

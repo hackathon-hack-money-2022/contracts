@@ -18,13 +18,16 @@ contract Rebalancer {
         amm = _amm;
     }
 
-    function deposit(Portfolio memory portfolio)
+    function deposit(Portfolio calldata portfolio)
         public
         payable
         returns (uint256)
     {
-        require(portfolio.SNX + portfolio.DAI == 100);
-        require(0 < msg.value);
+        require(
+            portfolio.SNX + portfolio.DAI == 100,
+            "Portfolio does not add up to 100 percentage"
+        );
+        require(0 < msg.value, "No value deposited");
 
         uint8 numberOfAssets = 0;
 

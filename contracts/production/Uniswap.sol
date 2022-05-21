@@ -83,14 +83,12 @@ contract UniswapAMM is AMM {
 
     function getLatestPrice(Tokens token)
         public
-        pure
+        view
         override
         returns (uint256, int8)
     {
-        require(
-            false,
-            "This is not supported yet, hopefully in a close future it will be"
-        );
+        uint256 price = uint256(priceFeed.getTokenPrice(token));
+
         return (0, 8);
     }
 
