@@ -1,45 +1,26 @@
-# Contracts
+## Rebalancer - contracts
+[Rebalancer is an application taking inspiration from the now shutdown Prism exchange](https://github.com/hackathon-hack-money-2022/.github/blob/main/profile/README.md)
 
+In this repository is the core component of the Rebalancer application. It's the contracts that pools the capital together to allow more efficient Rebalancing of portfolios[1], and keeps users exposure to assets constant.
 
-### Links
-- https://kovan-optimistic.etherscan.io/address/0x5ee99870b0bfaaa76ff583659e66afe10c783383
-    - Address of the "owner"
+[1] Since not every users don't have to pay gas fees. The gas fee is paid once for rebalancing all users portfolios.
 
-### Foundry
-- https://book.getfoundry.sh/cheatcodes/deal.html?highlight=deal(#deal
+# How does it work ? 
+1. User deposit ETH into the application and gives the application an "portfolio" they want to keep constant. For instance an user can deposit 1 ETH and say they want it to be 50% in DAI and 50% in SNX. 
+2. The protocol will initialize the portfolio.
+3. When users are "done" with the portfolio they can withdraw, and get the ETH back (not supported yet - first point of future work).
 
+# Future work
+Did not have as much time as I wanted for this project (worked all day - tried to work on this at night), so sadly I did not have enough time to complete all the things I wanted :(
 
-### Uniswap
-- SwapRouter
-    - https://kovan-optimistic.etherscan.io/address/0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45#code
+Here are a list of a few features that should be added for the application to be "complete" (mvp)
 
-- Docs / Info
-    - https://docs.uniswap.org/protocol/reference/deployments
-    - https://docs.uniswap.org/protocol/reference/periphery/SwapRouter
-        - SwapRouter02
-    - https://soliditydeveloper.com/uniswap2
-    - https://blockchain.oodles.io/dev-blog/utilizing-the-new-uniswap-v2-in-your-smart-contract/
-
-### Uniswap tx
-- https://kovan-optimistic.etherscan.io/tx/0xd7ecf64e0e202fb8708762f5a3e8009d6a58c4308c4a52725e5d210060e5068e
-- https://kovan-optimistic.etherscan.io/tx/0x13cf89038ca35c9f05b728f6cee58f231afe6237973fbb63107c3b9729977c0d
-
-#### Problems with uniswap
-- https://github.com/Uniswap/solidity-lib/blob/master/contracts/libraries/TransferHelper.sol
-    - Somethings fails inside here
-    - I have enough liquidity, so not sure what the problem is.
-- Got it working when calling it directly to the contract
-    - https://kovan-optimistic.etherscan.io/tx/0x9402b8e46cf04da64f77145caea07f8aa15f53da5e06586d648feaa0a2b05c55
-    - Tried to deposit ETH into a smart contract and then call it througth it, but it did not work
-- Got it working (finally)
-    - I think the problem was that the wrong interface was used for the router
-        - https://kovan-optimistic.etherscan.io/tx/0x87ee2fc4335d9000818cdb6bd03a98ede6981672cc510559f968bcc4aee2c99b
-        
-### Rip - the price oracle for uniswap is actually not onchain
-- could do something like https://stackoverflow.com/a/71815432
-    - Requires user to interact :(
-- Never mind should be able to use reserve0/reserve1, but it is on pool level. I think this is ok, but we need to use liquid pool as the oracle.
-    - https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
-- I knew I had miscalled something, it's even in the uniswap v3 whitepaper. 
-    - https://docs.uniswap.org/protocol/concepts/V3-overview/oracle    
-
+- Complete the application, i.e add support for withdraw :) 
+- Add some standard scaling constant of numbers to make the math safer.
+- Add some fuzzing logic for the rebalancing logic, is it safe ? I wrote it in one go, so probably there is some arithmetic error there.
+- Add some protection against slippages!!
+- Make things more capital efficient. 
+- Use an AMM oracle since that is more trustless and cooler
+- Integrate other protocols, not just AMMs
+    - We could integrate with compound and allow users to put an percentage of all rebalances into a "savings" account. This could be useful in case of an market drop.
+    - Integrate with some options protocols to allow users rebalance short positions. This would allow users to hedge more easily within the portocol.
