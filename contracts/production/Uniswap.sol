@@ -8,6 +8,7 @@ import "forge-std/console.sol";
 import {IV3SwapRouter} from "../interfaces/IV3SwapRouter.sol";
 import "v3-periphery/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
+import "./ChainLinkPriceFeed.sol";
 
 /*
     This has to be changed, but it works for now.
@@ -17,6 +18,7 @@ contract UniswapAMM is AMM {
         0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45;
 
     IV3SwapRouter public uniswapRouter = IV3SwapRouter(UNISWAP_ROUTER_ADDRESS);
+    ChainLinkPriceFeed private priceFeed = new ChainLinkPriceFeed();
 
     mapping(Tokens => address) public tokenAddress;
 
@@ -83,13 +85,13 @@ contract UniswapAMM is AMM {
         public
         pure
         override
-        returns (uint256)
+        returns (uint256, int8)
     {
         require(
             false,
             "This is not supported yet, hopefully in a close future it will be"
         );
-        return 0;
+        return (0, 8);
     }
 
     function getTokenAddress(Tokens token)

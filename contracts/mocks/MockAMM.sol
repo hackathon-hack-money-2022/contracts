@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import "../abstract/AMM.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
-import {MockBTC} from "./MockBTC.sol";
-import {MockLTC} from "./MockLTC.sol";
+import {MockSNX} from "./MockSNX.sol";
+import {MockDAI} from "./MockDAI.sol";
 import {MockToken} from "./MockToken.sol";
 import "forge-std/console.sol";
 
@@ -13,17 +13,18 @@ import "forge-std/console.sol";
 */
 contract MockAMM is AMM {
     mapping(Tokens => uint256) prices;
+    mapping(Tokens => int8) pricesScales;
     mapping(Tokens => MockToken) tokens;
 
-    MockBTC mockBTC;
-    MockLTC mockLTC;
+    MockSNX mockSNX;
+    MockDAI mockDAI;
 
-    constructor(MockBTC _mockBTC, MockLTC _mockLTC) {
-        mockBTC = _mockBTC;
-        mockLTC = _mockLTC;
+    constructor(MockSNX _mockSNX, MockDAI _mockLTC) {
+        mockSNX = _mockSNX;
+        mockDAI = _mockLTC;
 
-        tokens[Tokens.BTC] = mockBTC;
-        tokens[Tokens.LTC] = mockLTC;
+        tokens[Tokens.SNX] = mockSNX;
+        tokens[Tokens.DAI] = mockDAI;
     }
 
     function swap(
@@ -52,18 +53,22 @@ contract MockAMM is AMM {
         return 0;
     }
 
-    function setPrice(uint256 _price, Tokens token) public {
+    function setPrice(uint256 _price, Tokens token, int8 scale) public {
         // set the price in ETH
         prices[token] = _price;
+        pricesScales[token] = scale;
     }
 
     function getLatestPrice(Tokens token)
         public
         view
         override
-        returns (uint256)
+        returns (uint256, int8)
     {
-        return prices[token];
+        return (
+            prices[token],
+            pricesScales[token]
+        );
     }
 
     function getTokenAddress(Tokens token)

@@ -7,8 +7,8 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract Rebalancer {
     // Deposited amount with total exposure in ETH
-    uint256 public btcDeposit;
-    uint256 public ltcDeposit;
+    uint256 public SNXDeposit;
+    uint256 public DAIDeposit;
 
     AMM amm;
 
@@ -23,22 +23,22 @@ contract Rebalancer {
         payable
         returns (uint256)
     {
-        require(portfolio.btc + portfolio.ltc == 100);
+        require(portfolio.SNX + portfolio.DAI == 100);
         require(0 < msg.value);
 
         uint8 numberOfAssets = 0;
 
-        uint256 senderBtcDeposit = (portfolio.btc * msg.value) / 100;
-        uint256 newBtcDeposit = btcDeposit + senderBtcDeposit;
+        uint256 senderSnxDeposit = (portfolio.SNX * msg.value) / 100;
+        uint256 newSnxDeposit = SNXDeposit + senderSnxDeposit;
 
-        uint256 senderLTcDeposit = (portfolio.ltc * msg.value) / 100;
-        uint256 newLtcDeposit = ltcDeposit + senderLTcDeposit;
+        uint256 senderDAIDeposit = (portfolio.DAI * msg.value) / 100;
+        uint256 newDAIDeposit = DAIDeposit + senderDAIDeposit;
 
         // TODO: This could just be a function call, is that cheaper ?
-        if (0 < portfolio.btc) {
+        if (0 < portfolio.SNX) {
             numberOfAssets++;
         }
-        if (0 < portfolio.ltc) {
+        if (0 < portfolio.DAI) {
             numberOfAssets++;
         }
 
@@ -46,110 +46,110 @@ contract Rebalancer {
             To adjust the percentages we need to see how much this new capital
             affects the already deposited capital (bit tricky).
         */
-        amm.swap{value: senderBtcDeposit}(
+        amm.swap{value: senderSnxDeposit}(
             Tokens.ETH,
-            Tokens.BTC,
-            senderBtcDeposit
+            Tokens.SNX,
+            senderSnxDeposit
         );
-        amm.swap{value: senderLTcDeposit}(
+        amm.swap{value: senderDAIDeposit}(
             Tokens.ETH,
-            Tokens.LTC,
-            senderLTcDeposit
+            Tokens.DAI,
+            senderDAIDeposit
         );
 
         portfolioT0[msg.sender].push(
             PortfolioT0({
-                btc: amm.getLatestPrice(Tokens.BTC),
-                ltc: amm.getLatestPrice(Tokens.LTC),
+                SNX: getLatestPrice(Tokens.SNX),
+                DAI: getLatestPrice(Tokens.DAI),
                 ethDeposit: msg.value,
                 portfolio: portfolio,
                 numberOfAssets: numberOfAssets
             })
         );
 
-        btcDeposit = newBtcDeposit;
-        ltcDeposit = newLtcDeposit;
+        SNXDeposit = newSnxDeposit;
+        DAIDeposit = newDAIDeposit;
 
         return msg.value;
     }
 
     function rebalance() public {
         // output should be price in ETH
-        uint256 newBtcPrice = ERC20(amm.getTokenAddress(Tokens.BTC)).balanceOf(
+        uint256 newSnxPrice = ERC20(amm.getTokenAddress(Tokens.SNX)).balanceOf(
             address(this)
-        ) * amm.getLatestPrice(Tokens.BTC);
-        uint256 newLtcPrice = ERC20(amm.getTokenAddress(Tokens.LTC)).balanceOf(
+        ) * getLatestPrice(Tokens.SNX);
+        uint256 newDAIPrice = ERC20(amm.getTokenAddress(Tokens.DAI)).balanceOf(
             address(this)
-        ) * amm.getLatestPrice(Tokens.LTC);
+        ) * getLatestPrice(Tokens.DAI);
 
-        uint256 newTotalPrice = newBtcPrice + newLtcPrice;
+        uint256 newTotalPrice = newSnxPrice + newDAIPrice;
 
-        uint256 totalPriceDeposit = btcDeposit + ltcDeposit;
+        uint256 totalPriceDeposit = SNXDeposit + DAIDeposit;
 
-        uint256 btcRatio = (((newBtcPrice * 100) / ((newTotalPrice))));
-        uint256 btcWantedRatio = (((btcDeposit * 100) / (totalPriceDeposit)));
+        uint256 SnxRatio = (((newSnxPrice * 100) / ((newTotalPrice))));
+        uint256 SnxWantedRatio = (((SNXDeposit * 100) / (totalPriceDeposit)));
 
         // hardcoded for now
-        if (btcWantedRatio < btcRatio) {
+        if (SnxWantedRatio < SnxRatio) {
             // TODO: Make this a variable tracked by the smart contract
             uint256 coinExposure = 1;
-            uint256 ethChunks = ((newBtcPrice * (btcRatio - btcWantedRatio)) /
+            uint256 ethChunks = ((newSnxPrice * (SnxRatio - SnxWantedRatio)) /
                 100) / coinExposure;
 
             // TODO: THis should update the exposure to the assets.
-            // Because of the value increase, we have more in both BTC and LTC.
-            amm.swap(Tokens.BTC, Tokens.ETH, ethChunks);
+            // Because of the value increase, we have more in both SNX and DAI.
+            amm.swap(Tokens.SNX, Tokens.ETH, ethChunks);
             amm.swap{value: this.getBalance()}(
                 Tokens.ETH,
-                Tokens.LTC,
+                Tokens.DAI,
                 ethChunks
             );
 
-            btcDeposit = newBtcPrice - ethChunks;
-            ltcDeposit = ltcDeposit + ethChunks;
+            SNXDeposit = newSnxPrice - ethChunks;
+            DAIDeposit = DAIDeposit + ethChunks;
         }
     }
 
     function withdraw(uint256 portfolioIndex) public returns (uint256) {
         PortfolioT0 storage portfolio = portfolioT0[msg.sender][portfolioIndex];
         uint256 deposited = portfolio.ethDeposit;
-        int256 deltaBtc = getAdjustedDelta(
-            amm.getLatestPrice(Tokens.BTC),
-            portfolio.btc
+        int256 deltaSnx = getAdjustedDelta(
+            getLatestPrice(Tokens.SNX),
+            portfolio.SNX
         );
-        int256 deltaLtc = getAdjustedDelta(
-            amm.getLatestPrice(Tokens.LTC),
-            portfolio.ltc
+        int256 deltaDAI = getAdjustedDelta(
+            getLatestPrice(Tokens.DAI),
+            portfolio.DAI
         );
 
-        int256 deltaExposure = deltaBtc;
+        int256 deltaExposure = deltaSnx;
         uint256 uDeltaExposure = (
             deltaExposure < 0 ? uint256(-deltaExposure) : uint256(deltaExposure)
         ) / portfolio.numberOfAssets;
 
-        uint256 adjustedBtc = getAdjustedAmount(
+        uint256 adjustedSnx = getAdjustedAmount(
             deposited,
-            portfolio.btc,
-            portfolio.portfolio.btc,
+            portfolio.SNX,
+            portfolio.portfolio.SNX,
             uDeltaExposure,
             deltaExposure < 0
         );
 
-        uint256 adjustedLtc = getAdjustedAmount(
+        uint256 adjustedDAI = getAdjustedAmount(
             deposited,
-            portfolio.ltc,
-            portfolio.portfolio.ltc,
+            portfolio.DAI,
+            portfolio.portfolio.DAI,
             uDeltaExposure,
             deltaExposure < 0
         );
 
-        btcDeposit -= adjustedBtc;
-        ltcDeposit -= adjustedLtc;
+        SNXDeposit -= adjustedSnx;
+        DAIDeposit -= adjustedDAI;
 
-        amm.swap(Tokens.BTC, Tokens.ETH, adjustedBtc);
-        amm.swap(Tokens.LTC, Tokens.ETH, adjustedLtc);
+        amm.swap(Tokens.SNX, Tokens.ETH, adjustedSnx);
+        amm.swap(Tokens.DAI, Tokens.ETH, adjustedDAI);
 
-        return adjustedBtc + adjustedLtc;
+        return adjustedSnx + adjustedDAI;
     }
 
     function getAdjustedDelta(uint256 currentPrice, uint256 entryPrice)
@@ -181,24 +181,30 @@ contract Rebalancer {
                 assetEntryExposure) / 100;
     }
 
+    function getLatestPrice(Tokens token) private returns (uint256) {
+        (uint256 price, int8 scale) = amm.getLatestPrice(token);
+
+        return price;
+    }
+
     function getBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
     function totalDeposits() public view returns (uint256) {
-        return btcDeposit + ltcDeposit;
+        return SNXDeposit + DAIDeposit;
     }
 }
 
 struct Portfolio {
-    uint8 btc;
-    uint8 ltc;
+    uint8 SNX;
+    uint8 DAI;
 }
 
 struct PortfolioT0 {
     uint256 ethDeposit;
     uint8 numberOfAssets;
-    uint256 btc;
-    uint256 ltc;
+    uint256 SNX;
+    uint256 DAI;
     Portfolio portfolio;
 }

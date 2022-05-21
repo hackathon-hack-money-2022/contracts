@@ -8,20 +8,15 @@ abstract contract AMM {
         uint256 amount
     ) public payable virtual returns (uint256);
 
-    function getLatestPrice(Tokens token) public virtual returns (uint256);
-
-    function getTokenAddress(Tokens token)
+    function getLatestPrice(Tokens token)
         public
         virtual
-        returns (address);
+        returns (uint256, int8);
+
+    function getTokenAddress(Tokens token) public virtual returns (address);
 }
 
 enum Tokens {
-    // Only used in test, but wrapped tokens could be used
-    BTC,
-    // Only used in test, but wrapped tokens could be used
-    LTC, 
-    // Production tokens
     ETH,
     DAI,
     SNX

@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "./MockToken.sol";
 
-contract MockLTC is MockToken {
-    constructor() ERC20("Litecoin", "LTC") {}
+contract MockDAI is MockToken {
+    constructor() ERC20("DAI", "DAI") {}
 
     function mint(address target, uint256 amount) public override {
         _mint(target, amount);
